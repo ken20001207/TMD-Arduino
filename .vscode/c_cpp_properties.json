@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Arduino Uno",
+            "name": "Arduino",
             "includePath": [
                 "${workspaceFolder}/lib/**",
                 "/Applications/Arduino.app/Contents/Java/libraries/**",
@@ -19,11 +19,6 @@
             "intelliSenseMode": "clang-x64",
             "cStandard": "c11",
             "cppStandard": "c++17"
-        },
-        {
-            "name": "Mac",
-            "includePath": ["/Users/yuanlin/Documents/Arduino/libraries/MsTimer2", "/Users/yuanlin/Documents/Arduino/libraries/IRremote"],
-            "forcedInclude": ["/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino/Arduino.h"]
         }
     ],
     "version": 4
