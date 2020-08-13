@@ -1,11 +1,16 @@
-#include "Adafruit_NeoPixel.h"
-#include "MsTimer2.h"
+#include <ArduinoJson.h>
+#include <Adafruit_NeoPixel.h>
+#include <MsTimer2.h>
+
+#include <SoftwareSerial.h>
 
 #define LED1_PIN 6
 #define LED2_PIN 7
 #define LED3_PIN 8
 
 #define LED_NUM 10
+
+SoftwareSerial dataSerial(2, 3);  // RX, TX
 
 Adafruit_NeoPixel strips[] = {
     Adafruit_NeoPixel(LED_NUM, LED1_PIN, NEO_RGB + NEO_KHZ800),
@@ -38,8 +43,10 @@ void update_leds() {
         aniVal = 0;
 
     switch (LedMode) {
+        uint32_t color;
+        int brightness;
         case DisplayMode::NORMAL:
-            uint32_t color = Adafruit_NeoPixel::Color(red, green, blue);
+            color = Adafruit_NeoPixel::Color(red, green, blue);
 
             for (int i = 0; i < 3; i++) {
                 strips[i].fill(color, 0, shouldLightNum);
@@ -49,9 +56,9 @@ void update_leds() {
             break;
 
         case DisplayMode::BREATHING:
-            int brightness = aniVal / 255;
+            brightness = aniVal / 255;
 
-            uint32_t color = Adafruit_NeoPixel::Color(
+            color = Adafruit_NeoPixel::Color(
                 red * brightness, green * brightness, blue * brightness);
 
             for (int i = 0; i < 3; i++) {
@@ -67,7 +74,7 @@ void update_leds() {
             int bps[] = {0, 42, 85, 127, 170, 212, 255};
 
             for (int i = 0; i < 3; i++) {
-                int brightness = 0;
+                brightness = 0;
 
                 if (aniVal <= bps[i])
                     brightness = 0;
@@ -92,6 +99,37 @@ void setup() {
 
     MsTimer2::set(500, update_leds);
     MsTimer2::start();
+
+    Serial.begin(9600);
+    dataSerial.begin(9600);
 }
 
-void loop() {}
+String dataBuffer = "";
+
+void loop() {
+    if (dataSerial.available()) {
+        char dataChar = dataSerial.read();
+        dataBuffer += dataChar;
+
+        // DEBUG POINT 1
+        Serial.print(dataChar);
+
+        if (dataBuffer.charAt(dataBuffer.length() - 1) == '\n') {
+            // DEBUG POINT 2
+            Serial.println(dataBuffer.c_str());
+
+            StaticJsonDocument<1024> jsonDoc;
+            DeserializationError error = deserializeJson(jsonDoc, dataBuffer);
+
+            dataBuffer = "";
+
+            if (!error) {
+                String id = jsonDoc[0]["id"];
+                Serial.println(id);
+            } else {
+                Serial.println(error.c_str());
+                dataBuffer = "";
+            }
+        }
+    }
+}
