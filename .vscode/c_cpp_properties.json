@@ -14,10 +14,17 @@
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": false,
-                "path": ["/Applications/Arduino.app/Contents/Java/"]
+                "path": [
+                    "/Applications/Arduino.app/Contents/Java/"
+                ]
             },
-            "forcedInclude": ["/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino/Arduino.h"],
-            "defines": ["USBCON", "ARDUINO=10809"],
+            "forcedInclude": [
+                "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino/Arduino.h"
+            ],
+            "defines": [
+                "USBCON",
+                "ARDUINO=10809"
+            ],
             "intelliSenseMode": "clang-x64",
             "cStandard": "c11",
             "cppStandard": "c++17"
@@ -29,7 +36,9 @@
                 "/Applications/Arduino.app/Contents/Java/tools/**",
                 "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/**"
             ],
-            "forcedInclude": ["/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino/Arduino.h"]
+            "forcedInclude": [
+                "/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/cores/arduino/Arduino.h"
+            ]
         }
     ],
     "version": 4

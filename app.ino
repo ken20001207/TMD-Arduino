@@ -1,135 +1,91 @@
-#include <ArduinoJson.h>
-#include <Adafruit_NeoPixel.h>
-#include <MsTimer2.h>
+#include "global.h"
+#include "model.h"
 
-#include <SoftwareSerial.h>
+SoftwareSerial espSerial(2, 3);
 
-#define LED1_PIN 6
-#define LED2_PIN 7
-#define LED3_PIN 8
-
-#define LED_NUM 10
-
-SoftwareSerial dataSerial(2, 3);  // RX, TX
-
-Adafruit_NeoPixel strips[] = {
-    Adafruit_NeoPixel(LED_NUM, LED1_PIN, NEO_RGB + NEO_KHZ800),
-    Adafruit_NeoPixel(LED_NUM, LED2_PIN, NEO_RGB + NEO_KHZ800),
-    Adafruit_NeoPixel(LED_NUM, LED3_PIN, NEO_RGB + NEO_KHZ800)};
-
-enum DisplayMode {
-    SWIPE_RIGHT,
-    SWIPE_LEFT,
-    SWIPE_TOP,
-    SWIPE_DOWN,
-    BREATHING,
-    NORMAL
-};
-
-DisplayMode LedMode = DisplayMode::SWIPE_DOWN;
-
-int shouldLightNum = 5;
-
-// Following variable should between 0 and 255
-int aniVal = 0;
-int red = 0;
-int green = 0;
-int blue = 0;
-
-void update_leds() {
-    if (aniVal < 255 / 2)
-        aniVal += 1;
-    else
-        aniVal = 0;
-
-    switch (LedMode) {
-        uint32_t color;
-        int brightness;
-        case DisplayMode::NORMAL:
-            color = Adafruit_NeoPixel::Color(red, green, blue);
-
-            for (int i = 0; i < 3; i++) {
-                strips[i].fill(color, 0, shouldLightNum);
-                strips[i].show();
-            }
-
-            break;
-
-        case DisplayMode::BREATHING:
-            brightness = aniVal / 255;
-
-            color = Adafruit_NeoPixel::Color(
-                red * brightness, green * brightness, blue * brightness);
-
-            for (int i = 0; i < 3; i++) {
-                strips[i].fill(color);
-                strips[i].show();
-            }
-
-            break;
-
-        case DisplayMode::SWIPE_RIGHT:
-
-            // Break ponits between 0 and 255
-            int bps[] = {0, 42, 85, 127, 170, 212, 255};
-
-            for (int i = 0; i < 3; i++) {
-                brightness = 0;
-
-                if (aniVal <= bps[i])
-                    brightness = 0;
-                else if (bps[i] <= aniVal && aniVal >= bps[i + 2])
-                    brightness = map(aniVal, bps[i], bps[i + 2], 0, 1);
-                else if (bps[i + 2] <= aniVal && aniVal >= bps[i + 4])
-                    brightness = map(aniVal, 85, 170, 1, 0);
-                else if (aniVal >= bps[i + 4])
-                    brightness = 0;
-
-                strips[i].fill(strips[i].Color(
-                    red * brightness, green * brightness, blue * brightness));
-                strips[i].show();
-            }
-
-            break;
-    }
-}
+State state = State();
 
 void setup() {
-    for (int i = 0; i < 3; i++) strips[i].begin();
-
-    MsTimer2::set(500, update_leds);
-    MsTimer2::start();
-
     Serial.begin(9600);
-    dataSerial.begin(9600);
+    espSerial.begin(4800);
+    lcd.begin(16, 2);
+    paj7620Init();
+    printTextLCD(lcd, "Too Many DDL 1.0", "By Yuanlin Lin");
+    requstData();
 }
 
-String dataBuffer = "";
+void requstData() {
+    printTextLCD(lcd, "Fetching data ...", "Please wait");
+    // Send a char to requset ESP8266 fetch data
+    espSerial.print("a");
+}
+
+StaticJsonDocument<300> jsonDoc;
+DeserializationError error;
+
+uint8_t gesture = 0;
+int code;
+char *ssid;
 
 void loop() {
-    if (dataSerial.available()) {
-        char dataChar = dataSerial.read();
-        dataBuffer += dataChar;
+    if (espSerial.available()) {
+        deserializeJson(jsonDoc, espSerial);
 
-        // DEBUG POINT 1
-        Serial.print(dataChar);
+        if (!error) {
+            code = jsonDoc["code"];
+            switch (code) {
+                case EspResponse::CONNECTING_WIFI:
+                    printTextLCD(lcd, "Connecting WIFI", "Please Wait ...");
+                    break;
 
-        if (dataBuffer.charAt(dataBuffer.length() - 1) == '\n') {
-            // DEBUG POINT 2
-            Serial.println(dataBuffer.c_str());
+                case EspResponse::WIFI_CONNECTED:
+                    ssid = jsonDoc["ssid"];
+                    printTextLCD(lcd, "Connected to", ssid);
+                    delay(1000);
+                    requstData();
+                    break;
 
-            StaticJsonDocument<1024> jsonDoc;
-            DeserializationError error = deserializeJson(jsonDoc, dataBuffer);
+                case EspResponse::FETCH_SUCCESS:
+                    int todoAmount = jsonDoc["data"].size();
 
-            dataBuffer = "";
+                    Serial.print("Total ");
+                    Serial.print(todoAmount);
+                    Serial.println(" todo data fetched.");
 
-            if (!error) {
-                String id = jsonDoc[0]["id"];
-                Serial.println(id);
-            } else {
-                Serial.println(error.c_str());
-                dataBuffer = "";
+                    for (int i = 0; i < todoAmount && i < 10; i++) {
+                        char *id = jsonDoc["data"][i]["id"];
+                        char *title = jsonDoc["data"][i]["title"];
+                        char *ddl = jsonDoc["data"][i]["ddl"];
+                        state.setTodo(i, id, title, ddl);
+                    }
+                    break;
+
+                default:
+                    break;
             }
+
+        } else {
+            Serial.println(error.c_str());
         }
+    }
+
+    uint8_t error = paj7620ReadReg(0x43, 1, &gesture);
+
+    if (!error) {
+        switch (gesture) {
+            case GES_RIGHT_FLAG:
+                state.setDisplayTodoIndex(0);
+                break;
+            case GES_LEFT_FLAG:
+                state.setDisplayTodoIndex(1);
+                break;
+            case GES_DOWN_FLAG:
+                requstData();
+                break;
+            default:
+                break;
+        }
+    } else {
+        paj7620Init();
     }
 }
