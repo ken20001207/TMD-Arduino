@@ -25,7 +25,8 @@
         "ios": "cpp",
         "iosfwd": "cpp",
         "locale": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "__bit_reference": "cpp"
     },
     "C_Cpp.errorSquiggles": "Disabled"
 }

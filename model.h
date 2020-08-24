@@ -1,11 +1,12 @@
 #ifndef __model_h__
 #define __model_h__
 struct Todo {
-    char *id = new char[36];
     char *title = new char[36];
     char *ddl = new char[36];
+    char *status = new char[36];
 
-    Todo(char *id, char *title, char *ddl) : id(id), title(title), ddl(ddl) {}
+    Todo(char *title, char *ddl, char *status)
+        : title(title), ddl(ddl), status(status) {}
     Todo() {}
 };
 
@@ -40,17 +41,27 @@ class State {
 
    public:
     State();
+
     Todo getTodoData(int index);
     Todo getDisplayTodo();
+    DisplayMode getLEDMode();
     int getDisplayTodoIndex();
     int getTodoAmount();
     int getAniVal();
-    DisplayMode getLEDMode();
     uint32_t getColor();
     uint32_t getColorByBrightness(int brightness);
     int getShouldLightNum();
+
+    void setLEDMode(DisplayMode mode);
+    void setShouldLightNum(int num);
     void setTodo(int index, char *id, char *title, char *ddl);
-    void addAniVal();
+    void setDisplayColor(int red, int green, int blue);
     void setDisplayTodoIndex(int index);
+
+    void addAniVal();
+    void updateLEDs();
+
+    void nextTodo();
+    void prevTodo();
 };
 #endif

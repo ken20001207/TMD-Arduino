@@ -1,5 +1,6 @@
 {
     "sketch": "app.ino",
-    "board": "arduino:avr:uno",
-    "port": "/dev/tty.usbmodem143201"
+    "board": "arduino:avr:mega",
+    "port": "/dev/tty.usbserial-A50285BI",
+    "configuration": "cpu=atmega2560"
 }
