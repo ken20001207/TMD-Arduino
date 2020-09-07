@@ -92,7 +92,7 @@ TMD (Too Many Deadlines) 是浙江大学 2019 级计算机专业的学生林沅�
             response_data = []
             for todo in todos:
     						
-    						# 加 8个小时手动调回本地时间
+    		# 加 8个小时手动调回本地时间
                 ddl = (todo.deadline.astimezone(pytz.timezone('Asia/Taipei')) **+
                        timedelta(hours=8))**.astimezone(pytz.timezone('Asia/Taipei'))
 
@@ -122,25 +122,25 @@ TMD (Too Many Deadlines) 是浙江大学 2019 级计算机专业的学生林沅�
 // TMD-Arduino/Mega2560/model.cpp
 
 State::State() {
-		// 当前载入的待办数据，默认最多保存 10 个
+    // 当前载入的待办数据，默认最多保存 10 个
     todoDatas = new Todo[10];
-
-		// 记录了当前载入了几个
+    
+    // 记录了当前载入了几个
     todoAmount = 0;
 
-		// 当前显示哪个
+    // 当前显示哪个
     displayTodoIndex = 0;
 
-		// 当前灯应该亮几颗
+    // 当前灯应该亮几颗
     shouldLightNum = 5;
 
-		// 当前的灯效模式
+    // 当前的灯效模式
     LedMode = DisplayMode::SWIPE_DOWN;
     
-		// 动画帧数变量，会不断的更新来推进动画的渲染
-		aniVal = 0;
+    // 动画帧数变量，会不断的更新来推进动画的渲染
+    aniVal = 0;
 
-		// 当前显示的颜色
+    // 当前显示的颜色
     red = 0;
     green = 0;
     blue = 0;
@@ -220,12 +220,12 @@ void State::setDisplayTodoIndex(int index) {
 
                     int up_pos = aniVal / (255 / shouldLightNum);
 
-    								// 透过 j += 4 的方式来减少同时亮起的灯泡数量
+    		    // 透过 j += 4 的方式来减少同时亮起的灯泡数量
                     for (int j = 0; j < shouldLightNum; j += 4) {
                         double pos_diff =
                             1 - ((double)abs(j - up_pos) / (double)shouldLightNum);
     										
-    										// 透过 MAX_BRIGHTNESS 来限制最高亮度
+    			// 透过 MAX_BRIGHTNESS 来限制最高亮度
                         color = Adafruit_NeoPixel::Color(
                             green * MAX_BRIGHTNESS * pos_diff,
                             red * MAX_BRIGHTNESS * pos_diff,
