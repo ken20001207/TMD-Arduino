@@ -30,7 +30,7 @@ void requstData() {
     Serial1.print("a");
 }
 
-StaticJsonDocument<300> jsonDoc;
+StaticJsonDocument<2048> jsonDoc;
 DeserializationError error;
 
 uint8_t gesture = 0;
